@@ -1,0 +1,785 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Calculadora de Combustível</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Syne:wght@700;800&display=swap">
+
+<style>
+/* ── Tokens: slate-navy palette, Inter + Syne ─────────────────────── */
+:root {
+  --bg:          #ecf0f8;
+  --surface:     #ffffff;
+  --surface-2:   #f5f7fb;
+  --border:      #dde3ef;
+  --fg:          #19243a;
+  --fg-2:        #475569;
+  --fg-muted:    #8899b4;
+  --accent:      #2563eb;
+  --accent-glow: rgba(37,99,235,.18);
+  --ok:          #16a34a;
+  --warn:        #d97706;
+  --danger:      #dc2626;
+  --danger-tint: #fee2e2;
+  --shadow:      rgba(20,32,60,.10);
+
+  --font-display: 'Syne', 'Segoe UI', system-ui, sans-serif;
+  --font-body:    'Inter', 'Segoe UI', system-ui, sans-serif;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:          #0d1526;
+    --surface:     #162035;
+    --surface-2:   #1c2c46;
+    --border:      #263a58;
+    --fg:          #e4ecf7;
+    --fg-2:        #8da4c0;
+    --fg-muted:    #4a6080;
+    --accent:      #4a90f4;
+    --accent-glow: rgba(74,144,244,.22);
+    --ok:          #22c55e;
+    --warn:        #f59e0b;
+    --danger:      #f87171;
+    --danger-tint: #3b1010;
+    --shadow:      rgba(0,0,0,.40);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:          #0d1526;
+  --surface:     #162035;
+  --surface-2:   #1c2c46;
+  --border:      #263a58;
+  --fg:          #e4ecf7;
+  --fg-2:        #8da4c0;
+  --fg-muted:    #4a6080;
+  --accent:      #4a90f4;
+  --accent-glow: rgba(74,144,244,.22);
+  --ok:          #22c55e;
+  --warn:        #f59e0b;
+  --danger:      #f87171;
+  --danger-tint: #3b1010;
+  --shadow:      rgba(0,0,0,.40);
+  color-scheme: dark;
+}
+
+/* ── Reset & base ────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--fg);
+  min-height: 100%;
+  padding-block: 30px;
+  padding-left:  max(16px, env(safe-area-inset-left,  0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* ── Page shell ──────────────────────────────────────────────────── */
+.page { max-width: 1040px; margin-inline: auto; }
+
+/* ── Header ──────────────────────────────────────────────────────── */
+.header { text-align: center; margin-bottom: 34px; }
+
+.header-badge {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  width: 56px; height: 56px;
+  background: linear-gradient(140deg, #3b82f6 0%, #1e40af 100%);
+  border-radius: 18px;
+  font-size: 26px;
+  margin-bottom: 14px;
+  box-shadow: 0 10px 28px rgba(37,99,235,.32);
+}
+
+.header h1 {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 3.6vw, 26px);
+  font-weight: 800;
+  color: var(--fg);
+  text-wrap: balance;
+  letter-spacing: -.01em;
+}
+
+.header p {
+  font-size: 14px;
+  color: var(--fg-muted);
+  margin-top: 7px;
+}
+
+/* ── Section divider ─────────────────────────────────────────────── */
+.section-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin-block: 28px 18px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.section-divider::before,
+.section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── 2-column grid ───────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
+
+/* ── Card ────────────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 28px var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--fg);
+  margin-bottom: 20px;
+  display: flex; align-items: center; gap: 9px;
+}
+.card-accent-bar {
+  width: 4px; height: 18px;
+  background: var(--accent);
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* ── Form fields ─────────────────────────────────────────────────── */
+.field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.field:last-of-type { margin-bottom: 0; }
+
+.field label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--fg-2);
+}
+
+.input-row { position: relative; display: flex; align-items: center; }
+
+.input-row .unit-badge {
+  position: absolute; right: 12px;
+  font-size: 11.5px; font-weight: 600;
+  color: var(--fg-muted);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.field input[type="number"] {
+  width: 100%;
+  padding: 11px 14px;
+  padding-right: 52px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  font-size: 15px;
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+  background: var(--surface-2);
+  color: var(--fg);
+  transition: border-color .2s, box-shadow .2s, background .2s;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.field input[type="number"]::-webkit-inner-spin-button,
+.field input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+.field input[type="number"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+  background: var(--surface);
+}
+.field input[type="number"].invalid {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(220,38,38,.12);
+}
+
+.error-msg {
+  font-size: 12px;
+  color: var(--danger);
+  min-height: 1em;
+  display: block;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+.btn-row { display: flex; gap: 10px; margin-top: 16px; }
+
+.btn {
+  flex: 1;
+  padding: 12px 10px;
+  border: none;
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s, opacity .15s;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn:hover  { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); opacity: .88; }
+
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(37,99,235,.30);
+}
+.btn-primary:hover { box-shadow: 0 10px 24px rgba(37,99,235,.38); }
+
+.btn-ghost {
+  background: var(--surface-2);
+  color: var(--fg-2);
+  border: 1.5px solid var(--border);
+  box-shadow: none;
+  flex: 0 0 auto;
+  padding-inline: 14px;
+  font-size: 13px;
+}
+.btn-ghost:hover { background: var(--surface); box-shadow: none; }
+
+.btn-secondary {
+  background: linear-gradient(135deg, #475569, #1e293b);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(30,41,59,.22);
+}
+.btn-secondary:hover { box-shadow: 0 10px 24px rgba(30,41,59,.30); }
+
+/* ── Alert / info box ────────────────────────────────────────────── */
+.info-box {
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--accent);
+  font-size: 12.5px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  line-height: 1.55;
+}
+
+.form-error-box {
+  background: var(--danger-tint);
+  border: 1px solid rgba(220,38,38,.22);
+  color: var(--danger);
+  font-size: 12.5px;
+  padding: 10px 13px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+  display: none;
+}
+.form-error-box.show { display: block; animation: fadeUp .25s ease; }
+
+/* ── Placeholder ─────────────────────────────────────────────────── */
+.placeholder {
+  display: flex;
+  flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+  color: var(--fg-muted);
+  font-size: 13px;
+  padding: 36px 16px;
+  gap: 10px;
+  min-height: 180px;
+  line-height: 1.6;
+}
+.placeholder-icon { font-size: 26px; opacity: .45; }
+
+/* ── Results ─────────────────────────────────────────────────────── */
+.results { animation: fadeUp .3s ease; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(7px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Metric tiles ────────────────────────────────────────────────── */
+.metric {
+  border-radius: 14px;
+  padding: 13px 16px;
+  display: flex;
+  justify-content: space-between; align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+.metric:last-of-type { margin-bottom: 0; }
+.metric-label  { font-size: 12px; color: rgba(255,255,255,.68); font-weight: 500; }
+.metric-value  { font-size: 17px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.metric-blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+.metric-navy   { background: linear-gradient(135deg, #1e3a8a, #1e40af); }
+.metric-slate  { background: linear-gradient(135deg, #334155, #1e293b); }
+.metric-ok     { background: linear-gradient(135deg, #16a34a, #15803d); }
+.metric-warn   { background: linear-gradient(135deg, #d97706, #b45309); }
+
+/* ── Levels table ────────────────────────────────────────────────── */
+.table-heading {
+  font-size: 11.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .06em;
+  color: var(--fg-muted);
+  margin: 18px 0 8px;
+}
+
+.table-wrap {
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  max-height: 232px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.table-wrap::-webkit-scrollbar { width: 5px; }
+.table-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: center;
+  padding: 9px 14px;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.row:last-child { border-bottom: none; }
+
+.row.header-row {
+  background: var(--surface-2);
+  font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .06em;
+  color: var(--fg-muted);
+  position: sticky; top: 0; z-index: 1;
+  border-bottom: 1px solid var(--border);
+}
+
+.row-pct { display: flex; align-items: center; gap: 7px; font-weight: 600; color: var(--fg); }
+.pct-bar { width: 24px; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+.pct-bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), #1d4ed8); border-radius: 3px; }
+.row-liters { color: var(--fg-muted); }
+.row-km     { font-weight: 700; color: var(--fg); text-align: right; }
+
+/* ── Tank status notice ──────────────────────────────────────────── */
+.tank-notice {
+  background: var(--surface-2);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-size: 12.5px;
+  color: var(--fg-muted);
+  margin-top: 9px;
+  display: flex; align-items: center; gap: 8px;
+}
+.tank-notice-icon { font-size: 16px; opacity: .7; flex-shrink: 0; }
+
+/* ── Responsive tweaks ───────────────────────────────────────────── */
+@media (max-width: 480px) {
+  body { padding-block: 20px; }
+  .card { padding: 20px 16px; border-radius: 16px; }
+  .metric { flex-direction: column; align-items: flex-start; gap: 3px; }
+  .metric-value { font-size: 15px; }
+  .row { padding: 8px 10px; font-size: 11.5px; }
+  .btn-row { flex-direction: column; }
+  .btn-ghost { order: -1; flex: 0 0 auto; align-self: flex-end; }
+}
+
+/* color-mix fallback for older browsers */
+@supports not (color: color-mix(in srgb, red, blue)) {
+  .info-box { background: rgba(37,99,235,.07); border-color: rgba(37,99,235,.20); }
+}
+</style>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-badge">⛽</div>
+    <h1>Calculadora de Combustível</h1>
+    <p>Autonomia, custos e planejamento de viagem</p>
+  </header>
+
+  <!-- ── SEÇÃO 1: VEÍCULO ── -->
+  <div class="section-divider">Dados do veículo</div>
+
+  <div class="grid">
+
+    <!-- Formulário veículo -->
+    <div>
+      <div class="card">
+        <div class="card-title">
+          <span class="card-accent-bar"></span>
+          Dados do veículo e combustível
+        </div>
+
+        <form id="form-veiculo" novalidate>
+          <div class="field">
+            <label for="combustivel">Combustível no tanque</label>
+            <div class="input-row">
+              <input type="number" id="combustivel" step="0.01" placeholder="Ex: 40" inputmode="decimal" aria-describedby="erro-combustivel">
+              <span class="unit-badge">L</span>
+            </div>
+            <span class="error-msg" id="erro-combustivel" role="alert"></span>
+          </div>
+
+          <div class="field">
+            <label for="consumo">Consumo médio do veículo</label>
+            <div class="input-row">
+              <input type="number" id="consumo" step="0.01" placeholder="Ex: 12.5" inputmode="decimal" aria-describedby="erro-consumo">
+              <span class="unit-badge">km/L</span>
+            </div>
+            <span class="error-msg" id="erro-consumo" role="alert"></span>
+          </div>
+
+          <div class="field">
+            <label for="valorLitro">Preço do litro</label>
+            <div class="input-row">
+              <input type="number" id="valorLitro" step="0.01" placeholder="Ex: 5.89" inputmode="decimal" aria-describedby="erro-valorLitro">
+              <span class="unit-badge">R$/L</span>
+            </div>
+            <span class="error-msg" id="erro-valorLitro" role="alert"></span>
+          </div>
+
+          <div class="btn-row">
+            <button type="submit" class="btn btn-primary">Calcular</button>
+            <button type="button" class="btn btn-ghost" id="btn-limpar" title="Limpar campos">Limpar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Resultados veículo -->
+    <div>
+      <div class="card">
+        <div class="card-title">
+          <span class="card-accent-bar"></span>
+          Resultados
+        </div>
+
+        <div class="placeholder" id="placeholder-veiculo" aria-live="polite">
+          <span class="placeholder-icon">📊</span>
+          Preencha os dados do veículo e clique em <strong>Calcular</strong> para ver a autonomia e os custos.
+        </div>
+
+        <div id="resultados-veiculo" hidden>
+          <div class="metric metric-blue">
+            <span class="metric-label">Autonomia total</span>
+            <span class="metric-value" id="res-autonomia">—</span>
+          </div>
+          <div class="metric metric-navy">
+            <span class="metric-label">Custo total do tanque</span>
+            <span class="metric-value" id="res-custo-total">—</span>
+          </div>
+          <div class="metric metric-slate">
+            <span class="metric-label">Custo por quilômetro</span>
+            <span class="metric-value" id="res-custo-km">—</span>
+          </div>
+
+          <p class="table-heading">Autonomia restante por nível do tanque</p>
+          <div class="table-wrap" role="table" aria-label="Autonomia por nível do tanque">
+            <div class="row header-row" role="row">
+              <span role="columnheader">Nível</span>
+              <span role="columnheader">Litros</span>
+              <span style="text-align:right" role="columnheader">Km restantes</span>
+            </div>
+            <div id="corpo-tabela" role="rowgroup"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.grid -->
+
+
+  <!-- ── SEÇÃO 2: VIAGEM ── -->
+  <div class="section-divider">Planejamento de viagem</div>
+
+  <div class="grid">
+
+    <!-- Formulário viagem -->
+    <div>
+      <div class="card">
+        <div class="card-title">
+          <span class="card-accent-bar"></span>
+          Planejar uma viagem
+        </div>
+
+        <div class="info-box">
+          O cálculo usa o <strong>consumo médio</strong> e o <strong>preço do litro</strong> informados em <em>Dados do veículo</em>. Com a quantidade de combustível preenchida, o sistema também verifica se é necessário abastecer.
+        </div>
+
+        <form id="form-viagem" novalidate>
+          <div class="field">
+            <label for="distancia">Distância da viagem</label>
+            <div class="input-row">
+              <input type="number" id="distancia" step="0.01" placeholder="Ex: 350" inputmode="decimal" aria-describedby="erro-distancia">
+              <span class="unit-badge">km</span>
+            </div>
+            <span class="error-msg" id="erro-distancia" role="alert"></span>
+          </div>
+
+          <div class="form-error-box" id="erro-viagem-geral" role="alert"></div>
+
+          <div class="btn-row">
+            <button type="submit" class="btn btn-secondary">Calcular viagem</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Resultados viagem -->
+    <div>
+      <div class="card">
+        <div class="card-title">
+          <span class="card-accent-bar"></span>
+          Resultado da viagem
+        </div>
+
+        <div class="placeholder" id="placeholder-viagem" aria-live="polite">
+          <span class="placeholder-icon">🗺️</span>
+          Informe a distância para calcular quanto combustível e dinheiro a viagem vai exigir.
+        </div>
+
+        <div id="resultados-viagem" hidden>
+          <div class="metric metric-blue">
+            <span class="metric-label">Combustível necessário</span>
+            <span class="metric-value" id="res-viagem-litros">—</span>
+          </div>
+          <div class="metric metric-navy">
+            <span class="metric-label">Custo estimado da viagem</span>
+            <span class="metric-value" id="res-viagem-custo">—</span>
+          </div>
+
+          <div id="res-status-tile" class="metric" style="display:none">
+            <span class="metric-label" id="res-status-label">Situação do tanque</span>
+            <span class="metric-value" id="res-status-valor">—</span>
+          </div>
+
+          <div id="res-status-notice" class="tank-notice" style="display:none">
+            <span class="tank-notice-icon">💡</span>
+            <span id="res-status-notice-text"></span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /.grid -->
+
+</div><!-- /.page -->
+
+<script>
+// ── Helpers ────────────────────────────────────────────────────────
+function fmtMoeda(v) {
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+function fmtKm(v) {
+  return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' km';
+}
+function fmtL(v) {
+  return v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' L';
+}
+function parsePos(str) {
+  const n = parseFloat(str);
+  return (!str || isNaN(n) || n <= 0) ? null : n;
+}
+
+// ── Formulário do veículo ──────────────────────────────────────────
+const fVeiculo   = document.getElementById('form-veiculo');
+const inpComb    = document.getElementById('combustivel');
+const inpConsumo = document.getElementById('consumo');
+const inpPreco   = document.getElementById('valorLitro');
+const errComb    = document.getElementById('erro-combustivel');
+const errConsumo = document.getElementById('erro-consumo');
+const errPreco   = document.getElementById('erro-valorLitro');
+const divRes     = document.getElementById('resultados-veiculo');
+const divPH      = document.getElementById('placeholder-veiculo');
+const btnLimpar  = document.getElementById('btn-limpar');
+
+function validar(inp, erroEl, rotulo) {
+  const v = inp.value.trim();
+  if (!v || isNaN(Number(v))) {
+    erroEl.textContent = `Informe ${rotulo}.`;
+    inp.classList.add('invalid'); return false;
+  }
+  if (Number(v) <= 0) {
+    erroEl.textContent = 'O valor deve ser maior que zero.';
+    inp.classList.add('invalid'); return false;
+  }
+  return true;
+}
+function limparErroInp(inp, erroEl) {
+  inp.classList.remove('invalid');
+  erroEl.textContent = '';
+}
+
+fVeiculo.addEventListener('submit', e => {
+  e.preventDefault();
+  limparErroInp(inpComb,    errComb);
+  limparErroInp(inpConsumo, errConsumo);
+  limparErroInp(inpPreco,   errPreco);
+
+  const v1 = validar(inpComb,    errComb,    'a quantidade de combustível');
+  const v2 = validar(inpConsumo, errConsumo, 'o consumo médio do veículo');
+  const v3 = validar(inpPreco,   errPreco,   'o preço por litro');
+
+  if (!v1 || !v2 || !v3) {
+    divRes.hidden = true;
+    divPH.style.display = '';
+    return;
+  }
+
+  const litros     = parseFloat(inpComb.value);
+  const kmL        = parseFloat(inpConsumo.value);
+  const preco      = parseFloat(inpPreco.value);
+  const autonomia  = litros * kmL;
+  const custoTotal = litros * preco;
+  const custoKm    = preco / kmL;
+
+  document.getElementById('res-autonomia').textContent   = fmtKm(autonomia);
+  document.getElementById('res-custo-total').textContent = fmtMoeda(custoTotal);
+  document.getElementById('res-custo-km').textContent    = fmtMoeda(custoKm);
+
+  // tabela de níveis
+  const corpo = document.getElementById('corpo-tabela');
+  corpo.innerHTML = '';
+  for (let i = 10; i >= 1; i--) {
+    const pct   = i * 10;
+    const lRest = litros * (i / 10);
+    const kRest = lRest * kmL;
+    const linha = document.createElement('div');
+    linha.className = 'row';
+    linha.setAttribute('role', 'row');
+    linha.innerHTML = `
+      <span class="row-pct" role="cell">
+        <span class="pct-bar" aria-hidden="true"><span style="width:${pct}%"></span></span>
+        ${pct}%
+      </span>
+      <span class="row-liters" role="cell">${fmtL(lRest)}</span>
+      <span class="row-km"     role="cell">${fmtKm(kRest)}</span>`;
+    corpo.appendChild(linha);
+  }
+
+  divPH.style.display = 'none';
+  divRes.hidden = false;
+});
+
+// limpar campos ao digitar
+[inpComb, inpConsumo, inpPreco].forEach((inp, i) => {
+  const err = [errComb, errConsumo, errPreco][i];
+  inp.addEventListener('input', () => limparErroInp(inp, err));
+});
+
+// botão limpar tudo
+btnLimpar.addEventListener('click', () => {
+  fVeiculo.reset();
+  [inpComb, inpConsumo, inpPreco].forEach((inp, i) => {
+    limparErroInp(inp, [errComb, errConsumo, errPreco][i]);
+  });
+  divRes.hidden = true;
+  divPH.style.display = '';
+
+  // também oculta resultados de viagem
+  document.getElementById('resultados-viagem').hidden = true;
+  document.getElementById('placeholder-viagem').style.display = '';
+  document.getElementById('distancia').value = '';
+  limparErroInp(document.getElementById('distancia'), document.getElementById('erro-distancia'));
+  const boxGeral = document.getElementById('erro-viagem-geral');
+  boxGeral.textContent = '';
+  boxGeral.classList.remove('show');
+});
+
+// ── Formulário de viagem ───────────────────────────────────────────
+const fViagem     = document.getElementById('form-viagem');
+const inpDist     = document.getElementById('distancia');
+const errDist     = document.getElementById('erro-distancia');
+const errGeral    = document.getElementById('erro-viagem-geral');
+const divResV     = document.getElementById('resultados-viagem');
+const divPHV      = document.getElementById('placeholder-viagem');
+const statusTile  = document.getElementById('res-status-tile');
+const statusNotice= document.getElementById('res-status-notice');
+
+fViagem.addEventListener('submit', e => {
+  e.preventDefault();
+  limparErroInp(inpDist, errDist);
+  errGeral.textContent = '';
+  errGeral.classList.remove('show');
+
+  if (!validar(inpDist, errDist, 'a distância da viagem')) {
+    divResV.hidden = true;
+    divPHV.style.display = '';
+    return;
+  }
+
+  const kmL   = parsePos(inpConsumo.value);
+  const preco = parsePos(inpPreco.value);
+
+  if (!kmL || !preco) {
+    const faltam = [];
+    if (!kmL)   faltam.push('consumo médio (km/L)');
+    if (!preco) faltam.push('preço por litro (R$/L)');
+    errGeral.textContent = `Para calcular a viagem, preencha em Dados do Veículo: ${faltam.join(' e ')}.`;
+    errGeral.classList.add('show');
+    divResV.hidden = true;
+    divPHV.style.display = '';
+    return;
+  }
+
+  const dist          = parseFloat(inpDist.value);
+  const litrosNec     = dist / kmL;
+  const custoViagem   = litrosNec * preco;
+  const combustivelAt = parsePos(inpComb.value);
+
+  document.getElementById('res-viagem-litros').textContent = fmtL(litrosNec);
+  document.getElementById('res-viagem-custo').textContent  = fmtMoeda(custoViagem);
+
+  // status do tanque
+  statusTile.style.display   = 'none';
+  statusNotice.style.display = 'none';
+  statusTile.className       = 'metric';
+
+  if (combustivelAt !== null) {
+    statusTile.style.display = 'flex';
+    if (combustivelAt >= litrosNec) {
+      const sobraL  = combustivelAt - litrosNec;
+      const sobraKm = sobraL * kmL;
+      statusTile.classList.add('metric-ok');
+      document.getElementById('res-status-label').textContent = 'Tanque suficiente para a viagem';
+      document.getElementById('res-status-valor').textContent = `Sobram ${fmtKm(sobraKm)}`;
+    } else {
+      const faltaL  = litrosNec - combustivelAt;
+      const custAb  = faltaL * preco;
+      statusTile.classList.add('metric-warn');
+      document.getElementById('res-status-label').textContent = `Faltam ${fmtL(faltaL)} para completar`;
+      document.getElementById('res-status-valor').textContent = `+ ${fmtMoeda(custAb)}`;
+    }
+  } else {
+    statusNotice.style.display = 'flex';
+    document.getElementById('res-status-notice-text').textContent =
+      'Preencha a quantidade de combustível em Dados do Veículo para saber se precisa abastecer.';
+  }
+
+  divPHV.style.display = 'none';
+  divResV.hidden = false;
+});
+
+inpDist.addEventListener('input', () => {
+  limparErroInp(inpDist, errDist);
+  errGeral.textContent = '';
+  errGeral.classList.remove('show');
+});
+</script>
+
+</body></html>
